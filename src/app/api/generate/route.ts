@@ -3,6 +3,8 @@ import OpenAI from 'openai';
 import { put } from '@vercel/blob';
 import { toFile } from 'openai/uploads';
 
+export const maxDuration = 300; // 5 minutes
+
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
