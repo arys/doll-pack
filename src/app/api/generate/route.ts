@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
-import axios from 'axios';
+import OpenAI from 'openai';
+import { put } from '@vercel/blob';
+import { toFile } from 'openai/uploads';
 
-// Segmind API configuration
-const SEGMIND_API_KEY = process.env.SEGMIND_API_KEY;
-const SEGMIND_API_URL = "https://api.segmind.com/v1/gpt-image-1-edit";
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { image, name, description, accessories, clothingStyle } = body;
-
+    // Parse the request body
+    const { image, name, description, accessories, clothingStyle } = await request.json();
+    
     if (!image || !name || !description) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -17,99 +20,60 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upload the base64 image to Vercel Blob via our API
-    // Extract the base64 data from the data URL
-    const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    
-    if (!matches || matches.length !== 3) {
-      return NextResponse.json(
-        { error: 'Invalid image format' },
-        { status: 400 }
-      );
-    }
-    
-    const contentType = matches[1];
-    const base64Data = matches[2];
-    const timestamp = new Date().getTime();
-    const filename = `uploaded-image-${timestamp}.png`;
-    
-    // Upload to our Blob API
-    const blobResponse = await fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/blob`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        base64Data,
-        contentType,
-        filename,
-      }),
-    });
-    
-    if (!blobResponse.ok) {
-      throw new Error('Failed to upload image to Blob storage');
-    }
-    
-    const blobData = await blobResponse.json();
-    const imageUrl = blobData.url;
-
-    // Create the prompt for the action figure
+    // Create prompt with accessories and clothing style if provided
     let prompt = `Create a photorealistic action figure of the person in the photo.
 The figure should be full-body and placed inside a clear plastic box with a colorful cardboard background, just like real collectible toys.
 Make the packaging look as realistic as possible — shiny plastic, a top hook for hanging, and toy-store-style design.
 Place accessories next to the figure that reflect its style and image.
 On the box:
 — At the top, write in large letters: ${name}
-— Below that — description: ${description}`;
+— Below that — short description: ${description}`;
 
-    // Add accessories and clothing style if provided
+    // Add accessories info if provided
     if (accessories) {
       prompt += `\nInclude these accessories with the figure: ${accessories}`;
     }
-    
+
+    // Add clothing style info if provided
     if (clothingStyle) {
-      prompt += `\nThe figure should wear: ${clothingStyle}`;
+      prompt += `\nThe figure should be wearing: ${clothingStyle}`;
     }
 
-    prompt += `\nMake the image as realistic as possible — as if it's a real toy you'd find in a store.`;
-
-    // Prepare the request data for Segmind API
-    const requestData = {
+    // Convert base64 image data
+    const base64Image = image.split(',')[1];
+    const inputBuffer = Buffer.from(base64Image, 'base64');
+    
+    // Create a File object for the OpenAI API
+    const imageFile = await toFile(inputBuffer, 'image.png', { type: 'image/png' });
+    
+    // Edit image using OpenAI SDK
+    const response = await openai.images.edit({
+      model: "gpt-image-1",
+      image: imageFile,
       prompt: prompt,
-      image_urls: [imageUrl],
-      size: "auto",
-      quality: "auto",
-      background: "opaque",
-      output_compression: 100,
-      output_format: "png"
-    };
+      n: 1,
+      size: "1024x1536"
+    });
 
-    // Call Segmind API to generate the image
-    const response = await axios.post(
-      SEGMIND_API_URL, 
-      requestData, 
-      { 
-        headers: { 
-          'x-api-key': SEGMIND_API_KEY 
-        } 
-      }
-    );
-
-    // Check if we have a valid response
-    if (!response.data || !response.data.image_url) {
-      return NextResponse.json(
-        { error: 'No image generated' },
-        { status: 500 }
-      );
+    const b64Json = response.data?.[0]?.b64_json;
+    
+    if (!b64Json) {
+      throw new Error('Failed to generate image or b64_json is missing');
     }
+    
+    // Upload to Vercel Blob
+    const blob = await put(`doll-${Date.now()}.png`, Buffer.from(b64Json, 'base64'), {
+      contentType: 'image/png',
+      access: 'public',
+    });
 
-    // Return the generated image URL
-    return NextResponse.json({ imageUrl: response.data.image_url });
+    return NextResponse.json({ imageUrl: blob.url });
+    
   } catch (error) {
-    console.error('Error generating image:', error);
+    console.error('Error in image generation:', error);
     return NextResponse.json(
-      { error: 'Failed to generate image' },
+      { error: error instanceof Error ? error.message : 'Failed to generate image' },
       { status: 500 }
     );
   }
-} 
+}

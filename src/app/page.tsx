@@ -72,7 +72,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-pink-100 to-white dark:from-pink-950 dark:to-purple-950 p-4 md:p-8">
       <main className="max-w-5xl mx-auto rounded-xl bg-white dark:bg-gray-900 shadow-lg p-6 md:p-8 border border-pink-200 dark:border-pink-800">
         <h1 className="text-3xl font-bold text-center text-pink-600 dark:text-pink-400 mb-8">
-          Генератор Фигурок
+          Сгенерируй свою фигурку
         </h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -159,14 +159,13 @@ export default function Home() {
                     htmlFor="description"
                     className="block text-sm font-medium text-pink-700 dark:text-pink-300 mb-1"
                   >
-                    Описание
+                    Краткое описание
                   </label>
-                  <textarea
+                  <input
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Легендарный герой с необычными способностями"
-                    rows={3}
                     className="w-full px-3 py-2 border border-pink-300 dark:border-pink-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -182,7 +181,7 @@ export default function Home() {
                     id="accessories"
                     value={accessories}
                     onChange={(e) => setAccessories(e.target.value)}
-                    placeholder="Меч, щит, гаджеты и т.д."
+                    placeholder="Macbook, телефон, ключи, и т.д."
                     className="w-full px-3 py-2 border border-pink-300 dark:border-pink-700 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -191,7 +190,7 @@ export default function Home() {
                     htmlFor="clothingStyle"
                     className="block text-sm font-medium text-pink-700 dark:text-pink-300 mb-1"
                   >
-                    Стиль одежды
+                    Стиль одежды (необязательно)
                   </label>
                   <input
                     type="text"
@@ -311,7 +310,7 @@ export default function Home() {
       </main>
       
       <footer className="text-center mt-8 text-sm text-pink-600 dark:text-pink-400">
-        © {new Date().getFullYear()} Генератор Фигурок • Работает на Segmind API
+        © {new Date().getFullYear()} DollPack - dolle.dev
       </footer>
     </div>
   );
