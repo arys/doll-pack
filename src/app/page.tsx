@@ -9,7 +9,7 @@ export default function Home() {
   const [accessories, setAccessories] = useState("");
   const [clothingStyle, setClothingStyle] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<string | null>('https://lxnksa1hgwfnz9yo.public.blob.vercel-storage.com/doll-1746716225599.png');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewExpanded, setPreviewExpanded] = useState(false);
@@ -251,7 +251,7 @@ export default function Home() {
                   <h3 className="text-base font-medium text-pink-700 dark:text-pink-300 mb-2">
                     Сгенерированная фигурка:
                   </h3>
-                  <div className={`relative w-full aspect-square max-w-[400px] mx-auto rounded-md overflow-hidden shadow-xl ${
+                  <div className={`relative w-full aspect-2/3 max-w-[400px] mx-auto rounded-md overflow-hidden shadow-xl ${
                     loading ? "animate-pulse shadow-lg shadow-pink-500/50" : ""
                   }`}>
                     <Image
@@ -300,6 +300,7 @@ export default function Home() {
                     <div className="w-12 h-12 border-4 border-pink-600 dark:border-pink-400 border-t-transparent rounded-full animate-spin mb-4"></div>
                     <p className="text-pink-700 dark:text-pink-300 font-medium text-lg animate-pulse">
                       Создаем вашу фигурку...
+                      Это может занять до двух минут
                     </p>
                   </div>
                 </div>
